@@ -6,7 +6,7 @@ import {TextGeometry} from 'three/addons/geometries/TextGeometry.js';
 let container;
 
 let camera, scene, renderer;
-let linesGroup, dotsGroup, textGroup;
+let pointsLinesGroup, dotsGroup, textGroup, linesGroup;
 
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
@@ -77,12 +77,15 @@ function init() {
     linesGroup = new THREE.Group();
     linesGroup.position.y = 50;
 
+    pointsLinesGroup = new THREE.Group();
+    pointsLinesGroup.position.y = 50;
+
     dotsGroup = new THREE.Group();
     dotsGroup.position.y = 50;
 
     textGroup = new THREE.Group();
     textGroup.position.y = 50;
-    scene.add(linesGroup, dotsGroup, textGroup);
+    scene.add(pointsLinesGroup, dotsGroup, textGroup);
 
     function createSpacedPoint(shape, space) {
         return shape.getSpacedPoints(space);
@@ -94,6 +97,15 @@ function init() {
         const spacedPoints = createSpacedPoint(shape, space);
         const geometrySpacedPoints = new THREE.BufferGeometry().setFromPoints(spacedPoints)
 
+        let lines = new THREE.Line(geometrySpacedPoints, new THREE.LineBasicMaterial({
+            color: color,
+        }))
+
+        lines.position.set(x, y, z);
+        lines.rotation.set(rx, ry, rz);
+        lines.scale.set(s, s, s);
+        linesGroup.add(lines);
+
         let particles = new THREE.Points(geometrySpacedPoints, new THREE.PointsMaterial({
             color: color,
             size: lineDotWeight
@@ -102,8 +114,7 @@ function init() {
         particles.position.set(x, y, z);
         particles.rotation.set(rx, ry, rz);
         particles.scale.set(s, s, s);
-
-        linesGroup.add(particles);
+        pointsLinesGroup.add(particles);
     }
 
     function addDotShape(coordinates, color, rx, ry, rz, s) {
@@ -291,6 +302,9 @@ popUpContent.addEventListener("click", e => {
 })
 popUpContainer.addEventListener("click", () => {
     popUpContainer.style.display = "none";
+
+    scene.remove(linesGroup);
+    scene.add(pointsLinesGroup);
 })
 
 let positionX, positionY,
@@ -312,7 +326,10 @@ function onMouseClick(event) {
         obj = intersects[0].object;
         if (obj.userData.isNode) {
             popUpContainer.style.display = "flex";
-            //TODO изменить пунктир на линии
+
+            scene.remove(pointsLinesGroup);
+            scene.add(linesGroup);
+
             //TODO добавить анимацию линиям
         }
     }
